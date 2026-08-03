@@ -10,7 +10,6 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 COMPOSE_FILE="${COMPOSE_FILE:-${ROOT}/compose.yml}"
 ENV_FILE="${COMPOSE_ENV_FILE:-${ROOT}/.env}"
-COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-${SAMPLE}}"
 
 require_docker
 command -v docker >/dev/null 2>&1 || die "docker not found"
@@ -41,7 +40,6 @@ TZ=${tz}
 POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-}
 PROJECT_MOUNT=${PROJECT_MOUNT}
 HOSTNAME=${SAMPLE}
-COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
 EOF
   log "wrote ${ENV_FILE} (PROJECT_MOUNT=${PROJECT_MOUNT} IMAGE=${IMAGE} POSTGRESQL_VERSION=${POSTGRESQL_VERSION:-})"
 }
