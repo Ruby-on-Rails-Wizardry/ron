@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Warm mise/bundle on the shared /cache volume, then start Rails (development).
+# Used as the compose.yml service command when running on a sibling *-mise image.
+set -euo pipefail
+
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+eval "$(mise activate bash)" 2>/dev/null || true
+
+if command -v cache-env >/dev/null 2>&1; then
+  cache-env --ensure || true
+fi
+
+mise trust . 2>/dev/null || true
+if [[ -f mise.toml ]] || [[ -f Gemfile ]]; then
+  mise install
+fi
+
+export BUNDLE_CLEAN=false
+bundle config set --local clean false 2>/dev/null || true
+bundle check || bundle install --no-clean
+
+bin/rails db:prepare
+exec bin/rails server -b 0.0.0.0 -p "${PORT:-3000}"

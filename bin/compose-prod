@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Production compose (local Dockerfile, no mise). Pass-through to bin/compose.
+#
+#   bin/compose-prod up --build
+#   SECRET_KEY_BASE=… bin/compose-prod up --build
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export COMPOSE_FILE="${COMPOSE_FILE:-${ROOT}/compose.prod.yml}"
+exec "${ROOT}/bin/compose" "$@"

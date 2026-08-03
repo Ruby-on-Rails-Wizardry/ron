@@ -1,0 +1,50 @@
+# Fred uses its own PostgreSQL database on the cluster `db` service.
+#
+# Development/test: PostgreSQL only (adapter: postgresql + pg gem).
+# Compose sets DATABASE_URL=postgresql://…@db:5432/fred_development (wins over
+# discrete keys). Host without DATABASE_URL: localhost + cluster/cluster.
+# Production: multi-db SQLite sample kept for Kamal only.
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", "5432") %>
+  username: <%= ENV.fetch("POSTGRES_USER", "cluster") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "cluster") %>
+
+development:
+  <<: *default
+  database: fred_development
+
+test:
+  <<: *default
+  database: fred_test
+
+# Store production database in the storage/ directory, which by default
+# is mounted as a persistent Docker volume in config/deploy.yml.
+production:
+  primary:
+    adapter: sqlite3
+    max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    database: storage/production.sqlite3
+  cache:
+    adapter: sqlite3
+    max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    database: storage/production_cache.sqlite3
+    migrations_paths: db/cache_migrate
+  queue:
+    adapter: sqlite3
+    max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    database: storage/production_queue.sqlite3
+    migrations_paths: db/queue_migrate
+  cable:
+    adapter: sqlite3
+    max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    timeout: 5000
+    database: storage/production_cable.sqlite3
+    migrations_paths: db/cable_migrate

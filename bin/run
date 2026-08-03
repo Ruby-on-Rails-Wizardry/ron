@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# One-shot command in the sibling *-mise:dev image.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+if [[ "${1:-}" == "--" ]]; then
+  shift
+fi
+
+if [[ "$#" -eq 0 ]]; then
+  cat <<'EOF' >&2
+Usage:
+  bin/run <command> [args...]
+  bin/run -c 'shell pipeline'
+  bin/run -- mise --version
+EOF
+  exit 2
+fi
+
+if [[ "${1:-}" == "-c" ]]; then
+  shift
+  run_in_image bash -lc "$*"
+else
+  local_cmd=$(printf '%q ' "$@")
+  run_in_image bash -lc "${local_cmd}"
+fi

@@ -1,0 +1,47 @@
+# Development Compose — prebuilt ubuntu-mise:dev + shared /cache.
+# For multi-app path routing use the parent cluster: task cluster:up
+#
+# Service name and hostname: ron
+#   cd ../../ubuntu-mise && task build
+#   docker compose up
+#   open http://localhost:3002
+
+services:
+  ron:
+    hostname: ron
+    image: ${IMAGE:-ubuntu-mise:dev}
+    pull_policy: never
+    working_dir: /work
+    environment:
+      CACHE_ROOT: ${CACHE_ROOT:-/cache}
+      RAILS_ENV: development
+      PORT: ${PORT:-3002}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - type: bind
+        source: ${PROJECT_MOUNT:-.}
+        target: /work
+        bind:
+          create_host_path: true
+      - type: volume
+        source: cache
+        target: /cache
+    ports:
+      - "${HOST_PORT:-3002}:${PORT:-3002}"
+    stdin_open: true
+    tty: true
+    command: ["./bin/docker-dev-server"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS \"http://127.0.0.1:$${PORT:-3002}/up\" >/dev/null",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 180s
+
+volumes:
+  cache:
+    name: ${CACHE_VOLUME:-ubuntu-mise-cache}

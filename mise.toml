@@ -1,0 +1,102 @@
+# Tool pins + host UX for fred (prebuilt ubuntu-mise:dev).
+# Ruby version: Gemfile `ruby "…"` (idiomatic). Do not use .tool-versions.
+
+min_version = "2025.8.0"
+
+# Project defaults + host identity (see .mise.env, bin/mise-host-env.sh).
+# - .mise.env: committed knobs (POSTGRESQL_VERSION, …)
+# - mise-host-env.sh: USER, SHELL, DEV_UID, DEV_GID, IMAGE_USER, TZ (fill gaps only)
+[env]
+_.file = ".mise.env"
+_.source = "./bin/mise-host-env.sh"
+
+[settings]
+# Match prebuilt ubuntu-mise (glibc precompiled Ruby).
+ruby.compile = false
+idiomatic_version_file_enable_tools = ["ruby"]
+
+[tools]
+# Node.js 24 — Active LTS
+node = "24.18.0"
+# Yarn classic
+yarn = "1.22.22"
+# Python 3.13
+python = "3.13.14"
+# Task (go-task) — host UX in Taskfile.yml
+task = "3.52.0"
+
+# Host UX mirrors of Taskfile (same bin/*). Prefer: mise setup ≡ task setup
+# Interactive: raw=true. Not mirrored: Taskfile `default` — use `mise tasks`.
+
+[tasks.config]
+description = "Print effective image / volume / project settings"
+run = "./bin/config"
+
+[tasks.setup]
+description = "Ensure sibling image + cache + warm this sample"
+run = "./bin/setup"
+
+[tasks.warm]
+description = "Best-effort mise + bundle warm for this sample"
+run = "./bin/warm"
+
+[tasks.doctor]
+description = "Host / Docker / sibling image sanity checks"
+run = "./bin/doctor"
+
+[tasks.cache]
+description = "Create the named Docker volume for /cache"
+alias = ["cache:ensure"]
+run = "./bin/cache-ensure"
+
+[tasks."cache:reset"]
+description = "Delete /cache volume (mise run cache:reset -- -y)"
+run = "./bin/cache-reset"
+
+[tasks.run]
+description = "One-shot via docker run (mise run run -- cmd)"
+run = "./bin/run"
+
+[tasks.compose]
+description = "Pass-through to bin/compose (mise compose -- <args>)"
+raw = true
+run = "./bin/compose"
+
+[tasks."compose:config"]
+description = "Show resolved development compose config"
+run = "./bin/compose config"
+
+[tasks."compose:down"]
+description = "compose down (keeps volumes by default)"
+run = "./bin/compose down"
+
+[tasks."compose:run"]
+description = "One-shot via compose (mise compose:run -- cmd)"
+raw = true
+run = "./bin/compose run --rm fred"
+
+[tasks."compose:prod"]
+description = "Pass-through to compose.prod.yml (mise compose:prod -- up --build)"
+raw = true
+run = "./bin/compose-prod"
+
+[tasks."compose:prod:config"]
+description = "Show resolved production compose config"
+run = "./bin/compose-prod config"
+
+# --- Interactive / attach (TTY) ---
+
+[tasks.shell]
+description = "Interactive shell via docker run (TTY)"
+raw = true
+run = "./bin/shell"
+
+[tasks."compose:shell"]
+description = "Interactive shell via compose run (TTY)"
+raw = true
+run = "./bin/compose-shell"
+
+[tasks."compose:up"]
+description = "compose up development (attach; TTY)"
+raw = true
+run = "./bin/compose up"

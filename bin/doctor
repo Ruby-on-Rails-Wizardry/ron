@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Host / Docker / sibling image sanity checks.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+print_config
+echo
+printf '=== %s doctor ===\n' "${SAMPLE}"
+
+ok=0
+warn=0
+
+printf 'OK   host kind %s\n' "$(host_kind)"
+
+if command -v docker >/dev/null 2>&1; then
+  printf 'OK   docker on PATH\n'
+else
+  printf 'FAIL docker not on PATH\n'
+  ok=1
+fi
+
+if docker info >/dev/null 2>&1; then
+  printf 'OK   docker daemon\n'
+else
+  printf 'FAIL docker daemon not reachable\n'
+  ok=1
+fi
+
+if command -v task >/dev/null 2>&1; then
+  printf 'OK   task on PATH (%s)\n' "$(task --version 2>/dev/null | head -1)"
+else
+  printf 'WARN task not on PATH (install via mise: task in mise.toml)\n'
+  warn=1
+fi
+
+if command -v mise >/dev/null 2>&1; then
+  printf 'OK   mise on PATH (%s)\n' "$(mise --version 2>/dev/null | head -1)"
+else
+  printf 'WARN mise not on PATH\n'
+  warn=1
+fi
+
+if image_exists; then
+  printf 'OK   image %s\n' "${IMAGE}"
+else
+  printf 'WARN image %s missing — cd ../%s && task build\n' "${IMAGE}" "${FLAVOR_BASE}"
+  warn=1
+fi
+
+if docker volume inspect "${CACHE_VOLUME}" >/dev/null 2>&1; then
+  printf 'OK   volume %s\n' "${CACHE_VOLUME}"
+else
+  printf 'WARN volume %s missing (task cache / bin/cache-ensure)\n' "${CACHE_VOLUME}"
+  warn=1
+fi
+
+printf 'INFO POSTGRESQL_VERSION=%s (sibling image should match)\n' "${POSTGRESQL_VERSION:-}"
+
+if [[ "${ok}" -ne 0 ]]; then
+  log "doctor: failed"
+  exit 1
+fi
+if [[ "${warn}" -ne 0 ]]; then
+  log "doctor: ready with warnings"
+  exit 0
+fi
+log "doctor: ready"

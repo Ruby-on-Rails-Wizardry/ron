@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Best-effort warm of mise tools + package managers inside the sibling image.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+ensure_image
+ensure_cache_volume
+
+log "warming PROJECT=${PROJECT} IMAGE=${IMAGE}"
+
+run_in_image bash -lc '
+set -euo pipefail
+cd /work
+echo "== warm: pwd=$(pwd) =="
+
+if command -v cache-env >/dev/null 2>&1; then
+  cache-env --ensure || true
+  cache-env || true
+fi
+
+if [[ -f mise.toml ]] || [[ -f Gemfile ]]; then
+  echo "== warm: mise install =="
+  if command -v mise >/dev/null 2>&1; then
+    mise trust . 2>/dev/null || true
+    mise install || echo "warning: mise install failed (continuing)"
+  else
+    echo "warning: mise not on PATH"
+  fi
+fi
+
+eval "$(mise activate bash)" 2>/dev/null || true
+
+if [[ -f Gemfile ]]; then
+  echo "== warm: bundle install =="
+  if command -v bundle >/dev/null 2>&1; then
+    export BUNDLE_CLEAN=false
+    bundle config set --local clean false 2>/dev/null || true
+    bundle install --no-clean || echo "warning: bundle install failed"
+  else
+    echo "warning: bundle not available"
+  fi
+fi
+
+echo "== warm: done =="
+'

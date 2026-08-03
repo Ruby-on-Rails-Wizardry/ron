@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Ensure prebuilt ubuntu-mise base image + cache, then warm this sample.
+# Usage: bin/setup [--no-warm]
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+DO_WARM=1
+for arg in "$@"; do
+  case "${arg}" in
+    --no-warm) DO_WARM=0 ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: bin/setup [--no-warm]
+
+  Requires prebuilt ubuntu-mise base image (e.g. ubuntu-mise:dev). Build with:
+    cd ../../ubuntu-mise (or from cluster root: cd ../ubuntu-mise) && task build
+EOF
+      exit 0
+      ;;
+    *) die "unknown option: ${arg}" ;;
+  esac
+done
+
+print_config
+echo
+
+ensure_image
+"${ROOT}/bin/cache-ensure"
+
+if [[ "${DO_WARM}" -eq 1 ]]; then
+  "${ROOT}/bin/warm" || log "warning: warm finished with errors (see above)"
+else
+  log "skipping warm (--no-warm)"
+fi
+
+log "setup complete"
+log "next: task shell  |  task compose:up  |  bin/compose up"

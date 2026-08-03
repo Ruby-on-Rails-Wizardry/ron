@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Remove the named /cache volume (destructive). Requires CONFIRM=1 or -y.
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+require_docker
+
+if [[ "${1:-}" != "-y" && "${CONFIRM:-}" != "1" ]]; then
+  cat <<EOF >&2
+This deletes Docker volume: ${CACHE_VOLUME}
+Re-run with:  CONFIRM=1 $0
+          or: $0 -y
+EOF
+  exit 1
+fi
+
+if docker volume inspect "${CACHE_VOLUME}" >/dev/null 2>&1; then
+  log "removing volume ${CACHE_VOLUME}"
+  docker volume rm "${CACHE_VOLUME}"
+else
+  log "volume ${CACHE_VOLUME} does not exist"
+fi

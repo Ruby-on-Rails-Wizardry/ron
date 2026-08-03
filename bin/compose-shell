@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Interactive login shell via development Compose (sibling *-mise:dev).
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+ensure_image
+
+SHELL_CMD="${1:-bash}"
+shift || true
+case "${SHELL_CMD}" in
+  bash|sh|ksh|zsh|fish)
+    exec "${ROOT}/bin/compose" run --rm "${SAMPLE}" "${SHELL_CMD}" -l "$@"
+    ;;
+  *)
+    exec "${ROOT}/bin/compose" run --rm "${SAMPLE}" bash -l -c "${SHELL_CMD} $*"
+    ;;
+esac

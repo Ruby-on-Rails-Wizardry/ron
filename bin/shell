@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Interactive login shell in the sibling *-mise:dev image (this sample → /work).
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+
+DOCKER_FORCE_TTY=1
+
+normalize_shell() {
+  local name="${1:-}"
+  name="${name##*/}"
+  name="${name%%-*}"
+  case "${name}" in
+    bash) printf 'bash\n' ;;
+    zsh) printf 'zsh\n' ;;
+    fish) printf 'fish\n' ;;
+    ksh|ksh93|mksh|pdksh) printf 'ksh\n' ;;
+    sh|dash|ash) printf 'sh\n' ;;
+    *) printf '\n' ;;
+  esac
+}
+
+host_shell() {
+  local raw="" mapped=""
+  if [[ -n "${SHELL:-}" ]]; then
+    mapped="$(normalize_shell "${SHELL}")"
+    if [[ -n "${mapped}" ]]; then
+      printf '%s\n' "${mapped}"
+      return 0
+    fi
+  fi
+  if [[ -n "${PPID:-}" ]] && command -v ps >/dev/null 2>&1; then
+    raw="$(ps -p "${PPID}" -o comm= 2>/dev/null | tr -d ' ' || true)"
+    mapped="$(normalize_shell "${raw}")"
+    if [[ -n "${mapped}" ]]; then
+      printf '%s\n' "${mapped}"
+      return 0
+    fi
+  fi
+  printf 'bash\n'
+}
+
+SHELL_CMD=""
+if [[ "${1:-}" == "bash" || "${1:-}" == "zsh" || "${1:-}" == "fish" || "${1:-}" == "ksh" || "${1:-}" == "sh" ]]; then
+  SHELL_CMD="$1"
+  shift
+else
+  SHELL_CMD="$(host_shell)"
+  if [[ -z "${1:-}" ]]; then
+    log "shell ${SHELL_CMD} (image ${IMAGE})"
+  fi
+fi
+
+case "${SHELL_CMD}" in
+  bash) run_in_image bash -il "$@" ;;
+  zsh) run_in_image zsh -il "$@" ;;
+  sh|ksh|fish) run_in_image "${SHELL_CMD}" -l "$@" ;;
+  *)
+    log "unsupported shell ${SHELL_CMD}; falling back to bash"
+    run_in_image bash -il "$@"
+    ;;
+esac

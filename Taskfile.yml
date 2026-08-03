@@ -1,0 +1,140 @@
+# Host UX for ron (like ubuntu-sample). Requires Task: https://taskfile.dev
+# Development uses prebuilt ubuntu-mise:dev + /cache.
+# In the multi-app cluster, prefer from cluster root: task up:ron
+# Standalone: task setup && task compose:up
+#
+#   cd ../../ubuntu-mise && task build   # when nested under docker-mise/cluster
+#   task setup && task shell
+#   task compose:up
+#   SECRET_KEY_BASE=… task compose:prod -- up --build
+
+version: "3"
+
+env:
+  SAMPLE: ron
+  FLAVOR_BASE: ubuntu-mise
+  IMAGE: '{{.IMAGE | default "ubuntu-mise:dev"}}'
+  PROD_IMAGE: '{{.PROD_IMAGE | default "ron:prod"}}'
+  CACHE_VOLUME: '{{.CACHE_VOLUME | default "ubuntu-mise-cache"}}'
+  IMAGE_USER: '{{.IMAGE_USER | default "dev"}}'
+  PROJECT:
+    sh: 'printf %s "${PROJECT:-{{.USER_WORKING_DIR}}}"'
+  DEV_UID:
+    sh: 'printf %s "${DEV_UID:-$(id -u)}"'
+  DEV_GID:
+    sh: 'printf %s "${DEV_GID:-$(id -g)}"'
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  config:
+    desc: Print effective image / volume / project settings
+    cmds:
+      - ./bin/config
+
+  setup:
+    desc: "Ensure ubuntu-mise:dev + cache + warm this app"
+    cmds:
+      - ./bin/setup {{.CLI_ARGS}}
+
+  shell:
+    desc: "Interactive shell via docker run (parallel: compose:shell)"
+    interactive: true
+    cmds:
+      - ./bin/shell {{.CLI_ARGS}}
+
+  run:
+    desc: "One-shot via docker run (task run -- cmd)"
+    cmds:
+      - ./bin/run -- {{.CLI_ARGS}}
+
+  warm:
+    desc: Best-effort mise + bundle warm for this app
+    cmds:
+      - ./bin/warm
+
+  cache:ensure:
+    desc: Create the named Docker volume for /cache
+    aliases: [cache]
+    cmds:
+      - ./bin/cache-ensure
+
+  cache:reset:
+    desc: "Delete /cache volume (task cache:reset -- -y)"
+    cmds:
+      - ./bin/cache-reset {{.CLI_ARGS}}
+
+  doctor:
+    desc: Host / Docker / base image sanity checks
+    cmds:
+      - ./bin/doctor
+
+  compose:shell:
+    desc: "Interactive shell via compose run (parallel: shell)"
+    interactive: true
+    cmds:
+      - ./bin/compose-shell {{.CLI_ARGS}}
+
+  compose:run:
+    desc: "One-shot via compose (task compose:run -- cmd)"
+    cmds:
+      - ./bin/compose run --rm {{.SAMPLE}} {{.CLI_ARGS}}
+
+  compose:up:
+    desc: compose up development (standalone; Rails via docker-dev-server)
+    interactive: true
+    cmds:
+      - ./bin/compose up {{.CLI_ARGS}}
+
+  compose:down:
+    desc: compose down (keeps volumes by default)
+    cmds:
+      - ./bin/compose down {{.CLI_ARGS}}
+
+  compose:config:
+    desc: Show resolved development compose config
+    cmds:
+      - ./bin/compose config
+
+  compose:
+    desc: Pass-through to bin/compose (task compose -- ps)
+    cmds:
+      - ./bin/compose {{.CLI_ARGS}}
+
+  compose:prod:
+    desc: "Pass-through to compose.prod.yml (task compose:prod -- up --build)"
+    cmds:
+      - ./bin/compose-prod {{.CLI_ARGS}}
+
+  compose:prod:config:
+    desc: Show resolved production compose config
+    cmds:
+      - ./bin/compose-prod config
+
+  # Cluster-aware shortcuts (when nested under docker-mise-cluster)
+  cluster:up:
+    desc: "Bring this app up in the parent cluster (nginx + db + redis)"
+    dir: ..
+    interactive: true
+    cmds:
+      - ./bin/compose up ron
+
+  server:
+    desc: "bin/rails server on host (task server -- -p 3002)"
+    interactive: true
+    cmds:
+      - bin/rails server {{.CLI_ARGS}}
+
+  console:
+    desc: bin/rails console on host
+    interactive: true
+    cmds:
+      - bin/rails console
+
+  lint:
+    desc: RuboCop via bin/rubocop
+    cmds:
+      - bin/rubocop {{.CLI_ARGS}}

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+ensure_cache_volume
+docker volume inspect "${CACHE_VOLUME}" --format 'name={{.Name}} mountpoint={{.Mountpoint}}' 2>/dev/null || true
