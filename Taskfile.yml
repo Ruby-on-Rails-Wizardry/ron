@@ -15,7 +15,7 @@ env:
   FLAVOR_BASE: ubuntu-mise
   IMAGE: '{{.IMAGE | default "ubuntu-mise:dev"}}'
   PROD_IMAGE: '{{.PROD_IMAGE | default "ron:prod"}}'
-  CACHE_VOLUME: '{{.CACHE_VOLUME | default "ubuntu-mise-cache"}}'
+  CACHE_VOLUME: '{{.CACHE_VOLUME | default "cache"}}'
   IMAGE_USER: '{{.IMAGE_USER | default "dev"}}'
   PROJECT:
     sh: 'printf %s "${PROJECT:-{{.USER_WORKING_DIR}}}"'

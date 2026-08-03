@@ -4,12 +4,12 @@ Rails demo app for [docker-mise-cluster](https://github.com/Ruby-on-Rails-Wizard
 
 ## Host UX (like ubuntu-sample)
 
-Uses prebuilt **`ubuntu-mise:dev`** + shared **`ubuntu-mise-cache`**.
+Uses prebuilt **`ubuntu-mise:dev`** + shared **`cache`**.
 
 | | |
 |--|--|
 | Dev image | `ubuntu-mise:dev` (`pull_policy: never`) |
-| Cache | `ubuntu-mise-cache` |
+| Cache | `cache` |
 | PG major | `POSTGRESQL_VERSION` in [`.mise.env`](.mise.env) (default **18**) |
 
 ### Multi-app cluster (recommended)
