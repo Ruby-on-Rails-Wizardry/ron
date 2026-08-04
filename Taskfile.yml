@@ -1,9 +1,9 @@
 # Host UX for ron (like ubuntu-sample). Requires Task: https://taskfile.dev
 # Development uses prebuilt ubuntu-mise:dev + /cache.
-# In the multi-app cluster, prefer from cluster root: task up:ron
+# In the multi-app cluster, prefer from cluster root: task up:all (or up:ron)
 # Standalone: task setup && task compose:up
 #
-#   cd ../../ubuntu-mise && task build   # when nested under docker-mise/cluster
+#   cd ../ubuntu-mise && task build   # sibling of docker-mise-cluster / work
 #   task setup && task shell
 #   task compose:up
 #   SECRET_KEY_BASE=… task compose:prod -- up --build
