@@ -38,6 +38,9 @@ Session.vim
 
 /public/assets
 
+# Ignore node modules (Yarn classic install).
+/node_modules
+
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
