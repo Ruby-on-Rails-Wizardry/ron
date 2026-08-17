@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Ruby-on-Rails-Wizardry/wizardry_shared.git
-  revision: bed908904f9a2605c7b23118978cc6c47b7ff8e4
+  revision: e04234dcb566d471c7b0d7ab299f938c8e792b1f
   branch: master
   specs:
     wizardry_shared (0.1.0)
